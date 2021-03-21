@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name:  kanary-tunnel
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  kanary-container
+  namespace: kanary-tunnel
+  labels:
+    name:  kanary-container
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: kanary-container
+  template:
+    metadata:
+      labels:
+        app: kanary-container
+    spec:
+      containers:
+      - image:  code4clouds/canarykontainer:1.1
+        name:  canarykontainer
+        resources:
+          requests:
+            cpu: "20m"
+            memory: "16M"
+          limits:
+            cpu: "32m"
+            memory: "32M"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 90
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 30
+          timeoutSeconds: 10     
+        ports:
+        - containerPort:  5000
+          name:  canarykontainer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kanary-container
+  namespace: kanary-tunnel
+spec:
+  selector:
+    app: kanary-container
+  type: ClusterIP
+  ports:
+  - name: kanary-container
+    port: 80
+    targetPort: 5000
+    protocol: TCP

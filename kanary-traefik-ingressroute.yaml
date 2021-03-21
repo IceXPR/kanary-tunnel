@@ -1,0 +1,18 @@
+# https://kubernetes.io/docs/concepts/services-networking/ingress/#the-ingress-resource
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kanary-container
+  namespace: kanary-tunnel
+spec:
+  rules:
+  - host: kanarytunnel.jaclab.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kanary-container
+            port:
+              number: 80
